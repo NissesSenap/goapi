@@ -40,7 +40,7 @@
 			"response": []
 		},
 		{
-			"name": "GET User ID",
+			"name": "GET User ID Copy",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -76,6 +76,108 @@
 					"path": [
 						"users",
 						"something"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT User ID",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Mike\",\n\t\"role\": \"admin\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/users/:id",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{lastUserID}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT User ID - invalid id",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Mike\",\n\t\"role\": \"admin\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/users/:something",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":something"
+					],
+					"variable": [
+						{
+							"key": "something",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT User ID - invalid name",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"role\": \"admin\"\n}"
+				},
+				"url": {
+					"raw": "{{host}}/users/:something",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":something"
+					],
+					"variable": [
+						{
+							"key": "something",
+							"value": ""
+						}
 					]
 				}
 			},

@@ -37,7 +37,6 @@ func usersGetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersGetOne(w http.ResponseWriter, _ *http.Request, id bson.ObjectId) {
-	// Get the url id and put it in UserGetOne
 	u, err := user.One(id)
 	if err != nil {
 		if err == storm.ErrNotFound {
@@ -45,6 +44,27 @@ func usersGetOne(w http.ResponseWriter, _ *http.Request, id bson.ObjectId) {
 			return
 		}
 		postError(w, http.StatusInternalServerError)
+		return
+	}
+	postBodyResponse(w, http.StatusOK, jsonResponse{"user": u})
+}
+
+func usersPutOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
+	// TODO catch if id exist or not
+	u := new(user.User)
+	err := bodyToUser(r, u)
+	if err != nil {
+		postError(w, http.StatusBadRequest)
+		return
+	}
+	u.ID = id
+	err = u.Save()
+	if err != nil {
+		if err == user.ErrRecordInvalid {
+			postError(w, http.StatusBadRequest)
+		} else {
+			postError(w, http.StatusInternalServerError)
+		}
 		return
 	}
 	postBodyResponse(w, http.StatusOK, jsonResponse{"user": u})
