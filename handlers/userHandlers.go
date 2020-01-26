@@ -49,6 +49,19 @@ func usersGetOne(w http.ResponseWriter, _ *http.Request, id bson.ObjectId) {
 	postBodyResponse(w, http.StatusOK, jsonResponse{"user": u})
 }
 
+func usersDeleteOne(w http.ResponseWriter, _ *http.Request, id bson.ObjectId) {
+	err := user.Delete(id)
+	if err != nil {
+		if err == storm.ErrNotFound {
+			postError(w, http.StatusNotFound)
+			return
+		}
+		postError(w, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func usersPutOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
 	// TODO catch if id exist or not
 	u := new(user.User)
@@ -62,9 +75,9 @@ func usersPutOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
 	if err != nil {
 		if err == user.ErrRecordInvalid {
 			postError(w, http.StatusBadRequest)
-		} else {
-			postError(w, http.StatusInternalServerError)
+			return
 		}
+		postError(w, http.StatusInternalServerError)
 		return
 	}
 	postBodyResponse(w, http.StatusOK, jsonResponse{"user": u})
@@ -91,9 +104,9 @@ func usersPatchOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
 	if err != nil {
 		if err == user.ErrRecordInvalid {
 			postError(w, http.StatusBadRequest)
-		} else {
-			postError(w, http.StatusInternalServerError)
+			return
 		}
+		postError(w, http.StatusInternalServerError)
 		return
 	}
 	postBodyResponse(w, http.StatusOK, jsonResponse{"user": u})
@@ -111,9 +124,9 @@ func usersPostOne(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == user.ErrRecordInvalid {
 			postError(w, http.StatusBadRequest)
-		} else {
-			postError(w, http.StatusInternalServerError)
+			return
 		}
+		postError(w, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Location", "/users/"+u.ID.Hex())
