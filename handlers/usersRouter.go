@@ -13,6 +13,7 @@ func UsersRouter(w http.ResponseWriter, r *http.Request) {
 	if path == "/users" {
 		switch r.Method {
 		case http.MethodGet:
+			usersGetAll(w, r)
 			return
 		case http.MethodPost:
 			return
