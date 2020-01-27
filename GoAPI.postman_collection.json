@@ -40,9 +40,50 @@
 			"response": []
 		},
 		{
-			"name": "GET User ID Copy",
+			"name": "HEAD user list",
+			"request": {
+				"method": "HEAD",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET User ID",
 			"request": {
 				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/:id",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{lastUserID}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HEAD User ID",
+			"request": {
+				"method": "HEAD",
 				"header": [],
 				"url": {
 					"raw": "{{host}}/users/:id",
