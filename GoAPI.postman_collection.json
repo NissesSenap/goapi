@@ -57,6 +57,23 @@
 			"response": []
 		},
 		{
+			"name": "OPTIONS user list",
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "GET User ID",
 			"request": {
 				"method": "GET",
@@ -117,6 +134,30 @@
 					"path": [
 						"users",
 						"something"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "OPTIONS User ID",
+			"request": {
+				"method": "OPTIONS",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/users/:id",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"users",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "{{lastUserID}}"
+						}
 					]
 				}
 			},
