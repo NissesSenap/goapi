@@ -14,6 +14,9 @@ import (
 )
 
 func bodyToUser(r *http.Request, u *user.User) error {
+	if r == nil {
+		return errors.New("a request is requiered")
+	}
 	if r.Body == nil {
 		return errors.New("request bodi is empty")
 	}
