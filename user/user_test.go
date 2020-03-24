@@ -72,6 +72,33 @@ func BenchmarkRead(b *testing.B) {
 	}
 }
 
+func BenchmarkReadAll(b *testing.B) {
+	cleanDb(b)
+	b.StopTimer()
+
+	for i := 0; i < 100; i++ {
+
+		// Create the user so it can be read
+		u := &User{
+			ID:   bson.NewObjectId(),
+			Name: "Jhon_" + strconv.Itoa(i),
+			Role: "Tester",
+		}
+		err := u.Save()
+		if err != nil {
+			b.Fatalf("Error saving a record: %s", err)
+		}
+	}
+
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := All()
+		if err != nil {
+			b.Fatalf("Error retriving All records: %s", err)
+		}
+	}
+}
+
 func BenchmarkUpdate(b *testing.B) {
 	cleanDb(b)
 
