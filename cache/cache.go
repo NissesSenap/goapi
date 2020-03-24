@@ -32,7 +32,7 @@ func set(resource string, response *response) {
 }
 
 func get(resource string) *response {
-	cache.lock.RLock()
+	cache.lock.Lock()
 	resp, ok := cache.data[resource]
 	cache.lock.Unlock()
 	if ok {
