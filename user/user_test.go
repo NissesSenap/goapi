@@ -3,6 +3,7 @@ package user
 import (
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/asdine/storm"
@@ -13,6 +14,113 @@ import (
 func TestMain(m *testing.M) {
 	m.Run()
 	os.Remove(dbPath)
+}
+
+func cleanDb(b *testing.B) {
+	os.Remove(dbPath)
+
+	u := &User{
+		ID:   bson.NewObjectId(),
+		Name: "Jhon",
+		Role: "Tester",
+	}
+	err := u.Save()
+	if err != nil {
+		b.Fatalf("Error saving a record: %s", err)
+	}
+	b.ResetTimer()
+}
+
+func BenchmarkCreate(b *testing.B) {
+	cleanDb(b)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		u := &User{
+			ID:   bson.NewObjectId(),
+			Name: "Jhon_" + strconv.Itoa(i),
+			Role: "Tester",
+		}
+		b.StartTimer()
+		err := u.Save()
+		if err != nil {
+			b.Fatalf("Error saving a record: %s", err)
+		}
+	}
+}
+
+func BenchmarkRead(b *testing.B) {
+	cleanDb(b)
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		// Create the user so it can be read
+		u := &User{
+			ID:   bson.NewObjectId(),
+			Name: "Jhon_" + strconv.Itoa(i),
+			Role: "Tester",
+		}
+		err := u.Save()
+		if err != nil {
+			b.Fatalf("Error saving a record: %s", err)
+		}
+
+		b.StartTimer()
+		_, err = One(u.ID)
+		if err != nil {
+			b.Fatalf("Error retriving a record: %s", err)
+		}
+	}
+}
+
+func BenchmarkUpdate(b *testing.B) {
+	cleanDb(b)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		// Create the user so it can be updated
+		u := &User{
+			ID:   bson.NewObjectId(),
+			Name: "Jhon_" + strconv.Itoa(i),
+			Role: "Tester",
+		}
+		err := u.Save()
+		if err != nil {
+			b.Fatalf("Error saving a record: %s", err)
+		}
+
+		b.StartTimer()
+
+		u.Role = "developer"
+		err = u.Save()
+		if err != nil {
+			b.Fatalf("Error saving a record: %s", err)
+		}
+	}
+}
+
+func BenchmarkDelete(b *testing.B) {
+	cleanDb(b)
+
+	for i := 0; i < b.N; i++ {
+		// Create the user so it can be deleted
+		b.StopTimer()
+		u := &User{
+			ID:   bson.NewObjectId(),
+			Name: "Jhon_" + strconv.Itoa(i),
+			Role: "Tester",
+		}
+		err := u.Save()
+		if err != nil {
+			b.Fatalf("Error saving a record: %s", err)
+		}
+
+		b.StartTimer()
+
+		err = Delete(u.ID)
+		if err != nil {
+			b.Fatalf("Error removing a recrod: %s", err)
+		}
+	}
 }
 
 func TestCRUD(t *testing.T) {
@@ -91,8 +199,8 @@ func TestCRUD(t *testing.T) {
 		t.Fatalf("Error reading all records: %s", users)
 	}
 	// TODO make a better comparison then number of enteries
-	if len(users) != 3 {
-		t.Errorf("Different number of records retrived. Expected 3 Got: %d", len(users))
+	if len(users) != 2 {
+		t.Errorf("Different number of records retrived. Expected 2 Got: %d, %v", len(users), users)
 	}
 
 }

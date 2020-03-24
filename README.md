@@ -14,3 +14,7 @@ Import the json file
 
 Create a environment with:
 host localhost:11111
+
+## Benchmark
+
+go test -bench .
