@@ -14,6 +14,27 @@ import (
 
 type jsonResponse map[string]interface{}
 
+/* serveCache returns the cached value as an echo middleware
+The ninja return func is a way for echo middleware to be able to "stack"
+multiple middlewares after eachother.
+*/
+func serveCache(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if cache.Serve(c.Response(), c.Request()) {
+			return nil
+		}
+		return next(c)
+	}
+}
+
+// cacheResponse saves the return value to the cache as an echo middleware
+func cacheResponse(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Writer = cache.NewWriter(c.Response().Writer, c.Request())
+		return next(c)
+	}
+}
+
 func usersOptions(c echo.Context) error {
 	methods := []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions}
 	c.Response().Header().Set("Allow", strings.Join(methods, ","))
@@ -28,9 +49,6 @@ func userOptions(c echo.Context) error {
 }
 
 func usersGetAll(c echo.Context) error {
-	if cache.Serve(c.Response(), c.Request()) {
-		return nil
-	}
 	users, err := user.All()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError)
@@ -38,14 +56,10 @@ func usersGetAll(c echo.Context) error {
 	if c.Request().Method == http.MethodHead {
 		return c.NoContent(http.StatusOK)
 	}
-	c.Response().Writer = cache.NewWriter(c.Response().Writer, c.Request())
 	return c.JSON(http.StatusOK, jsonResponse{"users": users})
 }
 
 func usersGetOne(c echo.Context) error {
-	if cache.Serve(c.Response(), c.Request()) {
-		return nil
-	}
 	if !bson.IsObjectIdHex(c.Param("id")) {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
@@ -60,7 +74,6 @@ func usersGetOne(c echo.Context) error {
 	if c.Request().Method == http.MethodHead {
 		return c.NoContent(http.StatusOK)
 	}
-	c.Response().Writer = cache.NewWriter(c.Response().Writer, c.Request())
 	return c.JSON(http.StatusOK, jsonResponse{"user": u})
 }
 
@@ -105,7 +118,6 @@ func usersPutOne(c echo.Context) error {
 
 	}
 	cache.Drop("/users")
-	c.Response().Writer = cache.NewWriter(c.Response().Writer, c.Request())
 	return c.JSON(http.StatusOK, jsonResponse{"user": u})
 }
 
@@ -136,7 +148,6 @@ func usersPatchOne(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	cache.Drop("/users")
-	c.Response().Writer = cache.NewWriter(c.Response().Writer, c.Request())
 	return c.JSON(http.StatusOK, jsonResponse{"user": u})
 }
 
@@ -182,17 +193,17 @@ func main() {
 	u := e.Group("/users")
 
 	u.OPTIONS("", usersOptions)
-	u.HEAD("", usersGetAll)
-	u.GET("", usersGetAll)
+	u.HEAD("", usersGetAll, serveCache)
+	u.GET("", usersGetAll, serveCache, cacheResponse)
 	u.POST("", usersPostOne)
 
 	uid := u.Group("/:id")
 
 	uid.OPTIONS("", userOptions)
-	uid.HEAD("", usersGetOne)
-	uid.GET("", usersGetOne)
-	uid.PUT("", usersPutOne)
-	uid.PATCH("", usersPatchOne)
+	uid.HEAD("", usersGetOne, serveCache)
+	uid.GET("", usersGetOne, serveCache, cacheResponse)
+	uid.PUT("", usersPutOne, cacheResponse)
+	uid.PATCH("", usersPatchOne, cacheResponse)
 	uid.DELETE("", usersDeleteOne)
 
 	e.Logger.Fatal(e.Start(":12345"))
