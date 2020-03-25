@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 type response struct {
@@ -18,7 +21,11 @@ type memCache struct {
 }
 
 var (
-	cache = memCache{data: map[string]response{}}
+	cache          = memCache{data: map[string]response{}}
+	cacheProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "nr_served_cache_hits_total",
+		Help: "The total number of times cached repsonse was successfull served",
+	})
 )
 
 func set(resource string, response *response) {
@@ -87,5 +94,6 @@ func Serve(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodHead {
 		w.Write(resp.body)
 	}
+	cacheProcessed.Inc()
 	return true
 }
