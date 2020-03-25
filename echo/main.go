@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"strings"
 
@@ -174,6 +175,15 @@ func root(c echo.Context) error {
 	return c.String(http.StatusOK, "Running echo API v1")
 }
 
+func auth(username, password string, c echo.Context) (bool, error) {
+	// Be careful to use constant time comparison to prevent timing attacks
+	if subtle.ConstantTimeCompare([]byte(username), []byte("joe")) == 1 &&
+		subtle.ConstantTimeCompare([]byte(password), []byte("secret")) == 1 {
+		return true, nil
+	}
+	return false, nil
+}
+
 func main() {
 	e := echo.New()
 
@@ -195,16 +205,16 @@ func main() {
 	u.OPTIONS("", usersOptions)
 	u.HEAD("", usersGetAll, serveCache)
 	u.GET("", usersGetAll, serveCache, cacheResponse)
-	u.POST("", usersPostOne)
+	u.POST("", usersPostOne, middleware.BasicAuth(auth))
 
 	uid := u.Group("/:id")
 
 	uid.OPTIONS("", userOptions)
 	uid.HEAD("", usersGetOne, serveCache)
 	uid.GET("", usersGetOne, serveCache, cacheResponse)
-	uid.PUT("", usersPutOne, cacheResponse)
-	uid.PATCH("", usersPatchOne, cacheResponse)
-	uid.DELETE("", usersDeleteOne)
+	uid.PUT("", usersPutOne, middleware.BasicAuth(auth), cacheResponse)
+	uid.PATCH("", usersPatchOne, middleware.BasicAuth(auth), cacheResponse)
+	uid.DELETE("", usersDeleteOne, middleware.BasicAuth(auth))
 
 	e.Logger.Fatal(e.Start(":12345"))
 }
