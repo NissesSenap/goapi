@@ -8,6 +8,7 @@ import (
 	"github.com/NissesSenap/GoAPI/user"
 	"github.com/asdine/storm"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -165,6 +166,17 @@ func root(c echo.Context) error {
 func main() {
 	e := echo.New()
 
+	e.Pre(middleware.RemoveTrailingSlash())
+	// The Recover middleware will handle panics and dump a stack trace
+	e.Use(middleware.Recover())
+	// The Secure middleware will help to secure the page for example protecting against XSS attack
+	e.Use(middleware.Secure())
+
+	// Enable logging
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: `{"method": "${method}", "uri": "${uri}", "status": "${status}", "latency_human": "${latency_human}"}` + "\n",
+	}))
+
 	e.GET("/", root)
 
 	u := e.Group("/users")
@@ -183,5 +195,5 @@ func main() {
 	uid.PATCH("", usersPatchOne)
 	uid.DELETE("", usersDeleteOne)
 
-	e.Start(":12345")
+	e.Logger.Fatal(e.Start(":12345"))
 }
