@@ -9,6 +9,7 @@ import (
 	"github.com/NissesSenap/GoAPI/user"
 	"github.com/asdine/storm"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/middleware"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -197,6 +198,8 @@ func main() {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `{"method": "${method}", "uri": "${uri}", "status": "${status}", "latency_human": "${latency_human}"}` + "\n",
 	}))
+	p := prometheus.NewPrometheus("echo", nil)
+	p.Use(e)
 
 	e.GET("/", root)
 
