@@ -3,3 +3,5 @@
 
 # Removing user db
 user.db
+
+vendor/
