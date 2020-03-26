@@ -33,6 +33,34 @@ host localhost:11111
 
 go test -bench .
 
+## Testing
+
+### Vet deeper test of "syntax"
+
+Vet examines Go source code and reports suspicious constructs
+Allways good to run on all code bases
+
+```go vet```
+
+### Run tests + coverage
+
+```go test ./... -cover```
+
+### Visualize test coverage html
+
+```shell
+go test ./... -coverprofile=coverage.out
+
+go tool cover -html=coverage.out
+```
+
+### Find potential memory leaks
+
+-race tests to see if memory is used at the same time.
+
+```go test -race ./...```
+
+
 ## GO Documentation
 
 Apparently there is something called godoc
