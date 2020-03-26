@@ -1,161 +1,155 @@
 package handlers
 
 import (
-	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"net/http"
-
-	"github.com/asdine/storm"
-
-	"gopkg.in/mgo.v2/bson"
+	"strings"
 
 	"github.com/NissesSenap/GoAPI/cache"
 	"github.com/NissesSenap/GoAPI/user"
+	"github.com/asdine/storm"
+	"github.com/labstack/echo/v4"
+	"gopkg.in/mgo.v2/bson"
 )
 
-func bodyToUser(r *http.Request, u *user.User) error {
-	if r == nil {
-		return errors.New("a request is requiered")
-	}
-	if r.Body == nil {
-		return errors.New("request bodi is empty")
-	}
-	if u == nil {
-		return errors.New("a user is requeried")
-	}
-	bd, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bd, u)
+// UsersOptions give all the avliable API methods avaliabl in /users
+func UsersOptions(c echo.Context) error {
+	methods := []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions}
+	c.Response().Header().Set("Allow", strings.Join(methods, ","))
+	return c.NoContent(http.StatusOK)
 }
 
-func usersGetAll(w http.ResponseWriter, r *http.Request) {
-	if cache.Serve(w, r) {
-		return
-	}
+// UserOptions give all the avliable API methods avaliabl in /users/:id
+func UserOptions(c echo.Context) error {
+	// TODO automate the user & usersOptions to get it from the echo framework.
+	methods := []string{http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodHead, http.MethodDelete, http.MethodOptions}
+	c.Response().Header().Set("Allow", strings.Join(methods, ","))
+	return c.NoContent(http.StatusOK)
+}
+
+// UsersGetAll get all the users avliable in the db
+func UsersGetAll(c echo.Context) error {
 	users, err := user.All()
 	if err != nil {
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	if r.Method == http.MethodHead {
-		postBodyResponse(w, http.StatusOK, jsonResponse{})
-		return
+	if c.Request().Method == http.MethodHead {
+		return c.NoContent(http.StatusOK)
 	}
-	cw := cache.NewWriter(w, r)
-	postBodyResponse(cw, http.StatusOK, jsonResponse{"users": users})
+	return c.JSON(http.StatusOK, jsonResponse{"users": users})
 }
 
-func usersGetOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
-	if cache.Serve(w, r) {
-		return
+// UsersGetOne gets a single user /users/:id
+func UsersGetOne(c echo.Context) error {
+	if !bson.IsObjectIdHex(c.Param("id")) {
+		return echo.NewHTTPError(http.StatusNotFound)
 	}
+	id := bson.ObjectIdHex(c.Param("id"))
 	u, err := user.One(id)
 	if err != nil {
 		if err == storm.ErrNotFound {
-			postError(w, http.StatusNotFound)
-			return
+			return echo.NewHTTPError(http.StatusNotFound)
 		}
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
-	if r.Method == http.MethodHead {
-		postBodyResponse(w, http.StatusOK, jsonResponse{})
-		return
+	if c.Request().Method == http.MethodHead {
+		return c.NoContent(http.StatusOK)
 	}
-	cw := cache.NewWriter(w, r)
-	postBodyResponse(cw, http.StatusOK, jsonResponse{"user": u})
+	return c.JSON(http.StatusOK, jsonResponse{"user": u})
 }
 
-func usersDeleteOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
+// UsersDeleteOne deletes a single user /users/:id
+func UsersDeleteOne(c echo.Context) error {
+	if !bson.IsObjectIdHex(c.Param("id")) {
+		return echo.NewHTTPError(http.StatusNotFound)
+	}
+	id := bson.ObjectIdHex(c.Param("id"))
 	err := user.Delete(id)
 	if err != nil {
 		if err == storm.ErrNotFound {
-			postError(w, http.StatusNotFound)
-			return
+			return echo.NewHTTPError(http.StatusNotFound)
+
 		}
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
+
 	}
 	cache.Drop("/users")
-	cache.Drop(cache.MakeResource(r))
-	w.WriteHeader(http.StatusOK)
+	cache.Drop(cache.MakeResource(c.Request()))
+	return c.NoContent(http.StatusOK)
 }
 
-func usersPutOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
+// UsersPutOne puts a single user /users/:id
+func UsersPutOne(c echo.Context) error {
 	// TODO catch if id exist or not
 	u := new(user.User)
-	err := bodyToUser(r, u)
+	err := c.Bind(u)
 	if err != nil {
-		postError(w, http.StatusBadRequest)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest)
+
 	}
+	if !bson.IsObjectIdHex(c.Param("id")) {
+		return echo.NewHTTPError(http.StatusNotFound)
+	}
+	id := bson.ObjectIdHex(c.Param("id"))
 	u.ID = id
 	err = u.Save()
 	if err != nil {
 		if err == user.ErrRecordInvalid {
-			postError(w, http.StatusBadRequest)
-			return
+			return echo.NewHTTPError(http.StatusBadRequest)
 		}
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
+
 	}
 	cache.Drop("/users")
-	cw := cache.NewWriter(w, r)
-	postBodyResponse(cw, http.StatusOK, jsonResponse{"user": u})
+	return c.JSON(http.StatusOK, jsonResponse{"user": u})
 }
 
-func usersPatchOne(w http.ResponseWriter, r *http.Request, id bson.ObjectId) {
+// UsersPatchOne patches a single user /users/:id
+func UsersPatchOne(c echo.Context) error {
+	if !bson.IsObjectIdHex(c.Param("id")) {
+		return echo.NewHTTPError(http.StatusNotFound)
+	}
+	id := bson.ObjectIdHex(c.Param("id"))
 	u, err := user.One(id)
 	if err != nil {
 		if err == storm.ErrNotFound {
-			postError(w, http.StatusNotFound)
-			return
+			return echo.NewHTTPError(http.StatusNotFound)
+
 		}
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 
-	err = bodyToUser(r, u)
+	err = c.Bind(u)
 	if err != nil {
-		postError(w, http.StatusBadRequest)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 	// u.ID = id
 	err = u.Save()
 	if err != nil {
 		if err == user.ErrRecordInvalid {
-			postError(w, http.StatusBadRequest)
-			return
+			return echo.NewHTTPError(http.StatusBadRequest)
 		}
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	cache.Drop("/users")
-	cw := cache.NewWriter(w, r)
-	postBodyResponse(cw, http.StatusOK, jsonResponse{"user": u})
+	return c.JSON(http.StatusOK, jsonResponse{"user": u})
 }
 
-func usersPostOne(w http.ResponseWriter, r *http.Request) {
+// UsersPostOne creates a single user /users/:id
+func UsersPostOne(c echo.Context) error {
 	u := new(user.User)
-	err := bodyToUser(r, u)
+	err := c.Bind(u)
 	if err != nil {
-		postError(w, http.StatusBadRequest)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 	u.ID = bson.NewObjectId()
 	err = u.Save()
 	if err != nil {
 		if err == user.ErrRecordInvalid {
-			postError(w, http.StatusBadRequest)
-			return
+			return echo.NewHTTPError(http.StatusBadRequest)
 		}
-		postError(w, http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError)
 	}
 	cache.Drop("/users")
-	w.Header().Set("Location", "/users/"+u.ID.Hex())
-	w.WriteHeader(http.StatusCreated)
+	c.Response().Header().Set("Location", "/users/"+u.ID.Hex())
+	return c.NoContent(http.StatusCreated)
 }

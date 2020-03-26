@@ -1,93 +1,77 @@
 package handlers
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
-	"reflect"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/NissesSenap/GoAPI/user"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestBodyToUser(t *testing.T) {
-	valid := &user.User{
-		ID:   bson.NewObjectId(),
-		Name: "John",
-		Role: "Tester",
-	}
-	valid2 := &user.User{
-		ID:   valid.ID,
-		Name: "John",
-		Role: "Developer",
-	}
-	js, err := json.Marshal(valid)
-	if err != nil {
-		t.Errorf("Error marshalling a valid user: %s", err)
-		t.FailNow()
-	}
-	ts := []struct {
-		txt string
-		r   *http.Request
-		u   *user.User
-		err bool
-		exp *user.User
-	}{
-		{
-			txt: "nil request",
-			err: true,
-		},
-		{
-			txt: "exmpty request body",
-			r: &http.Request{
-				Body: ioutil.NopCloser(bytes.NewBufferString("{}")),
-			},
-			err: true,
-		},
-		{
-			txt: "malformed data",
-			r: &http.Request{
-				Body: ioutil.NopCloser(bytes.NewBufferString(`{"id":12}`)),
-			},
-			u:   &user.User{},
-			err: true,
-		},
-		{
-			txt: "valid request",
-			r: &http.Request{
-				Body: ioutil.NopCloser(bytes.NewBuffer(js)),
-			},
-			u:   &user.User{},
-			exp: valid,
-		},
-		{
-			txt: "valid patial request",
-			r: &http.Request{
-				Body: ioutil.NopCloser(bytes.NewBufferString(`{"role":"Developer", "age":22}`)),
-			},
-			u:   valid,
-			exp: valid2,
-		},
-	}
-	for _, tc := range ts {
-		t.Log(tc.txt)
-		err := bodyToUser(tc.r, tc.u)
-		if tc.err {
-			if err == nil {
-				t.Error("Excepted error, got none.")
-			}
-			continue
-		}
-		if err != nil {
-			t.Errorf("Unexpected error: %s", err)
-			continue
-		}
-		if !reflect.DeepEqual(tc.u, tc.exp) {
-			t.Error("Unmsrahalled data is different:")
-			t.Error(tc.u)
-			t.Error(tc.exp)
-		}
+/* TODO, create a generl function
+that takes in a struct that contains
+method http.Method
+body string
+ParamNames string
+ParamValues string
+
+Return a c.context
+
+Need a way to get a "gobal echo.New() to get that to work.
+Is it possible with a
+func TestMain(m *testing.M) {
+	m.Run()
+	os.Remove(dbPath)
+}
+?
+*/
+
+var (
+	userMethods  = []string{http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodHead, http.MethodDelete, http.MethodOptions}
+	usersMethods = []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions}
+)
+
+func TestGetUserOptions(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodOptions, "/users", http.NoBody)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if assert.NoError(t, UserOptions(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, strings.Join(userMethods, ","), rec.Header().Get("Allow"))
 	}
 }
+
+func TestGetUsersOptions(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodOptions, "/users", http.NoBody)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if assert.NoError(t, UsersOptions(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, strings.Join(usersMethods, ","), rec.Header().Get("Allow"))
+	}
+}
+
+/*
+func TestGetUserID(t *testing.T) {
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/users/", http.NoBody)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	// Generate ID
+	id := bson.NewObjectId()
+	t.Logf("The generated ID is: %v", id)
+	c.SetParamNames("id")
+	c.SetParamValues(string(id))
+
+}
+*/
