@@ -11,6 +11,7 @@ require (
 	github.com/labstack/echo-contrib v0.9.0
 	github.com/labstack/echo/v4 v4.1.15
 	github.com/prometheus/client_golang v1.5.1
+	github.com/stretchr/testify v1.4.0
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/yuin/goldmark v1.1.26 // indirect
 	go.etcd.io/bbolt v1.3.4 // indirect
