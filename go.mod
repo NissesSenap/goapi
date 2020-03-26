@@ -7,7 +7,7 @@ require (
 	github.com/Sereal/Sereal v0.0.0-20200325110826-39a46522b5e2 // indirect
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/labstack/echo v3.3.10+incompatible
+	github.com/gophercloud/gophercloud v0.9.0
 	github.com/labstack/echo-contrib v0.9.0
 	github.com/labstack/echo/v4 v4.1.15
 	github.com/prometheus/client_golang v1.5.1

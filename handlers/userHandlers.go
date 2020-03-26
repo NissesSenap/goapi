@@ -11,6 +11,19 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// PageGetter fuck off
+type PageGetter func(id bson.ObjectId) (*user.User, error)
+
+// UserFunction fuck off
+type UserFunction struct {
+	GetOne PageGetter
+}
+
+// NewUserFunction fuck off
+func NewUserFunction(uf PageGetter) *UserFunction {
+	return &UserFunction{GetOne: uf}
+}
+
 // UsersOptions give all the avliable API methods avaliabl in /users
 func UsersOptions(c echo.Context) error {
 	methods := []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions}
@@ -39,12 +52,14 @@ func UsersGetAll(c echo.Context) error {
 }
 
 // UsersGetOne gets a single user /users/:id
-func UsersGetOne(c echo.Context) error {
+func (d *UserFunction) UsersGetOne(c echo.Context) error {
+
 	if !bson.IsObjectIdHex(c.Param("id")) {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
 	id := bson.ObjectIdHex(c.Param("id"))
-	u, err := user.One(id)
+	u, err := d.GetOne(id)
+	// u, err := user.One(id)
 	if err != nil {
 		if err == storm.ErrNotFound {
 			return echo.NewHTTPError(http.StatusNotFound)
