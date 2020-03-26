@@ -2,15 +2,11 @@ package handlers
 
 import (
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
-// RootHandler handels the root
-func RootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Asset not found \n"))
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Running API v1\n"))
+// Root returns Status OK
+func Root(c echo.Context) error {
+	return c.String(http.StatusOK, "Running echo API v1")
 }

@@ -76,6 +76,7 @@ func makeRequest() (*http.Request, error) {
 	}, nil
 }
 
+/*
 func getAll(b *testing.B, r *http.Request) {
 	prepDb(100)
 	b.ResetTimer()
@@ -103,3 +104,4 @@ func BenchmarkGetAllCached(b *testing.B) {
 	}
 	getAll(b, r)
 }
+*/
