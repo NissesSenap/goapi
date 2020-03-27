@@ -11,16 +11,18 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// PageGetter fuck off
-type PageGetter func(id bson.ObjectId) (*user.User, error)
+// GetOneUser creates a type that is used in the struct
+// To be able to be overwritten when mocking the API.
+type GetOneUser func(id bson.ObjectId) (*user.User, error)
 
-// UserFunction fuck off
+// UserFunction the struct that contains different types of function
+// Depending on what we need to do
 type UserFunction struct {
-	GetOne PageGetter
+	GetOne GetOneUser
 }
 
-// NewUserFunction fuck off
-func NewUserFunction(uf PageGetter) *UserFunction {
+// NewUserFunction the wrapper function for GetOne
+func NewUserFunction(uf GetOneUser) *UserFunction {
 	return &UserFunction{GetOne: uf}
 }
 
@@ -52,13 +54,13 @@ func UsersGetAll(c echo.Context) error {
 }
 
 // UsersGetOne gets a single user /users/:id
-func (d *UserFunction) UsersGetOne(c echo.Context) error {
+func (uf *UserFunction) UsersGetOne(c echo.Context) error {
 
 	if !bson.IsObjectIdHex(c.Param("id")) {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
 	id := bson.ObjectIdHex(c.Param("id"))
-	u, err := d.GetOne(id)
+	u, err := uf.GetOne(id)
 	// u, err := user.One(id)
 	if err != nil {
 		if err == storm.ErrNotFound {

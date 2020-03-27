@@ -61,7 +61,7 @@ func main() {
 
 	e.GET("/", handlers.Root)
 
-	d := handlers.NewUserFunction(user.One)
+	uf := handlers.NewUserFunction(user.One)
 	u := e.Group("/users")
 
 	u.OPTIONS("", handlers.UsersOptions)
@@ -72,8 +72,8 @@ func main() {
 	uid := u.Group("/:id")
 
 	uid.OPTIONS("", handlers.UserOptions)
-	uid.HEAD("", d.UsersGetOne, serveCache)
-	uid.GET("", d.UsersGetOne, serveCache, cacheResponse)
+	uid.HEAD("", uf.UsersGetOne, serveCache)
+	uid.GET("", uf.UsersGetOne, serveCache, cacheResponse)
 	uid.PUT("", handlers.UsersPutOne, middleware.BasicAuth(auth), cacheResponse)
 	uid.PATCH("", handlers.UsersPatchOne, middleware.BasicAuth(auth), cacheResponse)
 	uid.DELETE("", handlers.UsersDeleteOne, middleware.BasicAuth(auth))
