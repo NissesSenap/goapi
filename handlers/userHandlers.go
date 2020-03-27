@@ -25,18 +25,18 @@ type UserFunction struct {
 	DeleteOne DeleteOneUser
 }
 
-/*
 // NewUserFunction the wrapper function for GetOne
-
 func NewUserFunction(uf GetOneUser) *UserFunction {
 	return &UserFunction{GetOne: uf}
 }
 
+/*
 // NewDeleteUser  the wrapper function for DeleteOne
 func NewDeleteUser(uf DeleteOneUser) *UserFunction {
 	return &UserFunction{DeleteOne: uf}
 }
 */
+
 // UsersOptions give all the avliable API methods avaliabl in /users
 func UsersOptions(c echo.Context) error {
 	methods := []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions}

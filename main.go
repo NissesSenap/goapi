@@ -61,12 +61,14 @@ func main() {
 
 	e.GET("/", handlers.Root)
 
-	uf := handlers.UserFunction{
-		GetOne:    user.One,
-		DeleteOne: user.Delete,
-	}
-	//	uf := handlers.NewUserFunction(user.One)
-	// uf.DeleteOne = user.Delete
+	/*
+		uf := handlers.UserFunction{
+			GetOne:    user.One,
+			DeleteOne: user.Delete,
+		}
+	*/
+	uf := handlers.NewUserFunction(user.One)
+	uf.DeleteOne = user.Delete
 	u := e.Group("/users")
 
 	u.OPTIONS("", handlers.UsersOptions)
