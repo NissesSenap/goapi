@@ -61,7 +61,12 @@ func main() {
 
 	e.GET("/", handlers.Root)
 
-	uf := handlers.NewUserFunction(user.One)
+	uf := handlers.UserFunction{
+		GetOne:    user.One,
+		DeleteOne: user.Delete,
+	}
+	//	uf := handlers.NewUserFunction(user.One)
+	// uf.DeleteOne = user.Delete
 	u := e.Group("/users")
 
 	u.OPTIONS("", handlers.UsersOptions)
@@ -76,7 +81,7 @@ func main() {
 	uid.GET("", uf.UsersGetOne, serveCache, cacheResponse)
 	uid.PUT("", handlers.UsersPutOne, middleware.BasicAuth(auth), cacheResponse)
 	uid.PATCH("", handlers.UsersPatchOne, middleware.BasicAuth(auth), cacheResponse)
-	uid.DELETE("", handlers.UsersDeleteOne, middleware.BasicAuth(auth))
+	uid.DELETE("", uf.UsersDeleteOne, middleware.BasicAuth(auth))
 
 	e.Logger.Fatal(e.Start(":12345"))
 }

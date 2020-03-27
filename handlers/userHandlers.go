@@ -15,17 +15,28 @@ import (
 // To be able to be overwritten when mocking the API.
 type GetOneUser func(id bson.ObjectId) (*user.User, error)
 
+// DeleteOneUser stuff
+type DeleteOneUser func(id bson.ObjectId) error
+
 // UserFunction the struct that contains different types of function
 // Depending on what we need to do
 type UserFunction struct {
-	GetOne GetOneUser
+	GetOne    GetOneUser
+	DeleteOne DeleteOneUser
 }
 
+/*
 // NewUserFunction the wrapper function for GetOne
+
 func NewUserFunction(uf GetOneUser) *UserFunction {
 	return &UserFunction{GetOne: uf}
 }
 
+// NewDeleteUser  the wrapper function for DeleteOne
+func NewDeleteUser(uf DeleteOneUser) *UserFunction {
+	return &UserFunction{DeleteOne: uf}
+}
+*/
 // UsersOptions give all the avliable API methods avaliabl in /users
 func UsersOptions(c echo.Context) error {
 	methods := []string{http.MethodGet, http.MethodPost, http.MethodHead, http.MethodOptions}
@@ -75,12 +86,13 @@ func (uf *UserFunction) UsersGetOne(c echo.Context) error {
 }
 
 // UsersDeleteOne deletes a single user /users/:id
-func UsersDeleteOne(c echo.Context) error {
+func (uf *UserFunction) UsersDeleteOne(c echo.Context) error {
 	if !bson.IsObjectIdHex(c.Param("id")) {
 		return echo.NewHTTPError(http.StatusNotFound)
 	}
 	id := bson.ObjectIdHex(c.Param("id"))
-	err := user.Delete(id)
+	// err := user.Delete(id)
+	err := uf.DeleteOne(id)
 	if err != nil {
 		if err == storm.ErrNotFound {
 			return echo.NewHTTPError(http.StatusNotFound)
