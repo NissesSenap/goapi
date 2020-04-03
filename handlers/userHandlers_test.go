@@ -57,7 +57,7 @@ func TestGetUsersOptions(t *testing.T) {
 
 	if assert.NoError(t, UsersOptions(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, strings.Join(usersMethods, ",("), rec.Header().Get("Allow"))
+		assert.Equal(t, strings.Join(usersMethods, ","), rec.Header().Get("Allow"))
 	}
 }
 
@@ -85,6 +85,7 @@ func TestGetUserID(t *testing.T) {
 	uf := NewUserFunction(mockGetOne)
 
 	if assert.NoError(t, uf.UsersGetOne(c)) {
+		t.Logf("This is the body return %v", rec.Body.String())
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 
