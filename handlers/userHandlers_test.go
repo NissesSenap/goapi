@@ -80,7 +80,7 @@ func TestGetUserID(t *testing.T) {
 	id := bson.NewObjectId()
 	t.Logf("The generated ID is: %v string: %v", id, id.String())
 	c.SetParamNames("id")
-	c.SetParamValues(id.String())
+	c.SetParamValues(id.Hex())
 
 	uf := NewUserFunction(mockGetOne)
 
