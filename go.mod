@@ -8,9 +8,9 @@ require (
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/labstack/echo-contrib v0.9.0
-	github.com/labstack/echo/v4 v4.1.15
-	github.com/prometheus/client_golang v1.5.1
-	github.com/stretchr/testify v1.4.0
+	github.com/labstack/echo/v4 v4.9.0
+	github.com/prometheus/client_golang v1.11.1
+	github.com/stretchr/testify v1.7.0
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	go.etcd.io/bbolt v1.3.4 // indirect
 	golang.org/x/net v0.33.0 // indirect
